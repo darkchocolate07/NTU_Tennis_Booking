@@ -1,0 +1,38 @@
+A_count = int(input("How many courts for session A? "))
+B_count = int(input("How many courts for session B? "))
+C_count = int(input("How many courts for session C? "))
+
+all_grouped_players = []
+
+# Session A Allocation
+session_a_tuesday = session_a_tuesday.copy()  # Work on a copy of the original DataFrame
+Session_A_court_Allocation = session_court_allocation(session_a_tuesday, flag=flag_a)
+grouped_A_players = save_court_allocation_to_file("A", Session_A_court_Allocation, A_count)
+all_grouped_players.extend(grouped_A_players)
+
+# Remove grouped players from the next session's dataset
+session_b_tuesday = session_b_tuesday[~session_b_tuesday['Name'].isin(all_grouped_players)]
+# Session B Allocation
+Session_B_court_Allocation = session_court_allocation(session_b_tuesday, flag=True)
+grouped_B_players = save_court_allocation_to_file("B", Session_B_court_Allocation, B_count)
+all_grouped_players.extend(grouped_B_players)
+
+# Remove grouped players from the next session's dataset
+session_c_thursday = session_c_thursday[~session_c_thursday['Name'].isin(all_grouped_players)]
+# Session C Allocation
+Session_C_court_Allocation = session_court_allocation(session_c_thursday, flag=True)
+grouped_C_players = save_court_allocation_to_file("C", Session_C_court_Allocation, C_count)
+all_grouped_players.extend(grouped_C_players)
+
+# Find all ungrouped players from the original datasets
+all_players = pd.concat([session_a_tuesday, session_b_tuesday, session_c_thursday])
+# Get ungrouped players by filtering out those in all_grouped_players
+ungrouped_players_df = all_players[~all_players['Name'].isin(all_grouped_players)]
+
+# Save ungrouped players to a text file
+with open("Ungrouped_Players.txt", "w") as file:
+    file.write("Ungrouped Players:\n")
+    for _, player in ungrouped_players_df.iterrows():
+        file.write(f"Name: {player['Name']}, Skill: {player['Skill']}, Time:{player['Timestamp']},Session:{player[session_column]}\n")
+
+print(f"Saved ungrouped players to 'Ungrouped_Players.txt'")
